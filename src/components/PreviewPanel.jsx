@@ -125,7 +125,7 @@ export default function PreviewPanel({ recipient, items, notes }) {
               {/* Grand Total Row */}
               <tr className="bg-gray-100">
                 <td colSpan="5" className="py-3 px-4 border border-gray-200 text-right font-heading font-bold text-brand-charcoal">Grand Total</td>
-                <td className="py-3 px-4 border border-gray-200 text-right font-bold text-brand-charcoal text-lg text-brand-gold-dark">
+                <td className="py-3 px-4 border border-gray-200 text-right font-bold text-brand-charcoal text-lg text-brand-gold-dark whitespace-nowrap">
                   ₹ {grandTotal.toLocaleString('en-IN')}
                 </td>
               </tr>
