@@ -67,9 +67,9 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row bg-gray-50">
+    <div className="min-h-screen flex flex-col lg:flex-row lg:h-screen lg:overflow-hidden bg-gray-50">
       {/* Left side: Editor */}
-      <div className="w-full lg:w-1/2 p-4 lg:p-8 h-screen overflow-y-auto custom-scrollbar border-r border-gray-200">
+      <div className="w-full lg:w-1/2 p-4 lg:p-8 lg:h-full lg:overflow-y-auto custom-scrollbar border-b lg:border-b-0 lg:border-r border-gray-200">
         <div className="max-w-2xl mx-auto">
           <div className="flex justify-between items-center mb-8">
             <h1 className="text-3xl font-heading font-bold text-brand-charcoal">Quotation Editor</h1>
@@ -93,7 +93,7 @@ function App() {
       </div>
 
       {/* Right side: Live Preview */}
-      <div className="w-full lg:w-1/2 p-4 lg:p-8 h-screen overflow-auto bg-gray-200 custom-scrollbar">
+      <div className="w-full lg:w-1/2 p-4 lg:p-8 lg:h-full lg:overflow-auto bg-gray-200 custom-scrollbar">
         <PreviewPanel 
           recipient={recipient}
           items={items}
