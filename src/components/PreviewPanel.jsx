@@ -150,7 +150,12 @@ export default function PreviewPanel({ recipient, items, notes }) {
               {items.map((item, idx) => (
                 <tr key={item.id} className={`break-inside-avoid ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
                   <td className="py-3 px-4 border border-gray-200 text-center text-sm text-gray-500">{idx + 1}</td>
-                  <td className="py-3 px-4 border border-gray-200 text-sm font-medium">{item.particular}</td>
+                  <td className="py-3 px-4 border border-gray-200 text-sm font-medium">
+                    <div>{item.particular}</div>
+                    {item.description && (
+                      <div className="text-xs text-gray-400 italic mt-1 font-normal leading-snug whitespace-pre-wrap">{item.description}</div>
+                    )}
+                  </td>
                   <td className="py-3 px-4 border border-gray-200 text-center text-sm">{item.isLumpSum ? '-' : item.quantity}</td>
                   <td className="py-3 px-4 border border-gray-200 text-right text-sm">{item.isLumpSum ? '-' : Number(item.rate).toLocaleString('en-IN')}</td>
                   <td className="py-3 px-4 border border-gray-200 text-center text-sm">{item.isLumpSum || !item.discount ? '-' : `${item.discount}%`}</td>

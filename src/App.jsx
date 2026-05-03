@@ -15,7 +15,7 @@ function App() {
   });
 
   const [items, setItems] = useState([
-    { id: 1, particular: '', quantity: 1, rate: 0, discount: 0, total: 0, isLumpSum: false }
+    { id: 1, particular: '', description: '', quantity: 1, rate: 0, discount: 0, total: 0, isLumpSum: false }
   ]);
 
   const [notes, setNotes] = useState([
@@ -47,11 +47,48 @@ function App() {
     const totalPages = Math.max(1, Math.ceil(contentPx / pageHeightPx));
     element.style.height = `${totalPages * 267}mm`;
 
+    // Helper: strip white background from an img element using canvas
+    const makeLogoTransparent = (imgEl) => {
+      return new Promise((resolve) => {
+        const canvas = document.createElement('canvas');
+        canvas.width = imgEl.naturalWidth;
+        canvas.height = imgEl.naturalHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(imgEl, 0, 0);
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
+        // Make near-white pixels transparent
+        for (let i = 0; i < data.length; i += 4) {
+          const r = data[i], g = data[i + 1], b = data[i + 2];
+          if (r > 230 && g > 230 && b > 230) {
+            data[i + 3] = 0; // transparent
+          }
+        }
+        ctx.putImageData(imageData, 0, 0);
+        resolve(canvas.toDataURL('image/png'));
+      });
+    };
+
     const opt = {
       margin:       [15, 0, 15, 0], // Top, Left, Bottom, Right
       filename:     `Quotation_${recipient.organization || 'AakarshanHomePlus'}.pdf`,
       image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2, useCORS: true },
+      html2canvas:  { 
+        scale: 2, 
+        useCORS: true,
+        onclone: async (clonedDoc) => {
+          // Find all logo images in the cloned document and replace with transparent version
+          const logoImgs = clonedDoc.querySelectorAll('img[alt="Aakarshan Home+ Logo"]');
+          const originalLogoImgs = document.querySelectorAll('img[alt="Aakarshan Home+ Logo"]');
+          for (let i = 0; i < logoImgs.length; i++) {
+            if (originalLogoImgs[i]) {
+              const transparentSrc = await makeLogoTransparent(originalLogoImgs[i]);
+              logoImgs[i].src = transparentSrc;
+              logoImgs[i].style.mixBlendMode = 'normal';
+            }
+          }
+        }
+      },
       jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
       pagebreak:    { mode: 'css', avoid: 'tr' }
     };

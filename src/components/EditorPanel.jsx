@@ -24,7 +24,7 @@ export default function EditorPanel({ recipient, setRecipient, items, setItems, 
 
   const addItem = () => {
     const newId = items.length > 0 ? Math.max(...items.map(i => i.id)) + 1 : 1;
-    setItems([...items, { id: newId, particular: '', quantity: 1, rate: 0, discount: 0, total: 0, isLumpSum: false }]);
+    setItems([...items, { id: newId, particular: '', description: '', quantity: 1, rate: 0, discount: 0, total: 0, isLumpSum: false }]);
   };
 
   const removeItem = (id) => {
@@ -131,6 +131,17 @@ export default function EditorPanel({ recipient, setRecipient, items, setItems, 
                   <label className="block text-xs text-gray-500 mb-1">Total (₹)</label>
                   <input type="number" min="0" value={item.total} onChange={(e) => handleItemChange(item.id, 'total', e.target.value)} disabled={!item.isLumpSum} className="w-full p-2 text-sm border border-gray-300 rounded focus:ring-brand-gold outline-none disabled:bg-gray-200 font-semibold" />
                 </div>
+              </div>
+
+              {/* Full-width description field */}
+              <div className="mt-2">
+                <textarea
+                  rows={2}
+                  value={item.description || ''}
+                  onChange={(e) => handleItemChange(item.id, 'description', e.target.value)}
+                  placeholder="Optional details / specs (shown in small font below the item)"
+                  className="w-full p-2 text-xs border border-gray-200 rounded focus:ring-brand-gold outline-none resize-none text-gray-500"
+                />
               </div>
               <div className="mt-2 flex items-center">
                 <input type="checkbox" id={`lump-${item.id}`} checked={item.isLumpSum} onChange={(e) => handleItemChange(item.id, 'isLumpSum', e.target.checked)} className="mr-2 text-brand-gold focus:ring-brand-gold rounded border-gray-300" />
