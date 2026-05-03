@@ -100,7 +100,7 @@ export default function PreviewPanel({ recipient, items, notes }) {
 
         {/* ITEMS TABLE */}
         <section className="mb-8">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full table-fixed text-left border-collapse">
             <thead>
               <tr className="bg-brand-gold text-white font-heading tracking-wide">
                 <th className="py-2 px-4 border border-brand-gold w-12 text-center text-sm">Sn.</th>
@@ -124,8 +124,8 @@ export default function PreviewPanel({ recipient, items, notes }) {
               ))}
               {/* Grand Total Row */}
               <tr className="bg-gray-100">
-                <td colSpan="5" className="py-3 px-4 border border-gray-200 text-right font-heading font-bold text-brand-charcoal">Grand Total</td>
-                <td className="py-3 px-4 border border-gray-200 text-right font-bold text-brand-charcoal text-lg text-brand-gold-dark whitespace-nowrap">
+                <td colSpan="4" className="py-3 px-4 border border-gray-200 text-right font-heading font-bold text-brand-charcoal">Grand Total</td>
+                <td colSpan="2" className="py-3 px-4 border border-gray-200 text-right font-bold text-brand-charcoal text-lg text-brand-gold-dark whitespace-nowrap">
                   ₹ {grandTotal.toLocaleString('en-IN')}
                 </td>
               </tr>
