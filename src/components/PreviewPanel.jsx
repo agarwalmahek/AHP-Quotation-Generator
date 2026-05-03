@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Phone, Mail, Globe, MapPin } from 'lucide-react';
+import watermarkImg from '../assets/Quotation Watermark.png';
 
 export default function PreviewPanel({ recipient, items, notes }) {
   const containerRef = useRef(null);
@@ -53,26 +54,60 @@ export default function PreviewPanel({ recipient, items, notes }) {
           }}
         >
           {/* Target div for html2pdf */}
-          <div id="pdf-preview" className="relative flex-1" style={{ padding: '15mm 15mm' }}>
+          <div 
+            id="pdf-preview" 
+            className="relative flex-1" 
+            style={{ 
+              padding: '15mm 15mm',
+              backgroundImage: `url("${watermarkImg}")`,
+              backgroundSize: '100% 267mm',
+              backgroundRepeat: 'repeat-y',
+              backgroundPosition: 'top center'
+            }}
+          >
         
-        {/* HEADER */}
-        <header className="pb-6 mb-8 flex justify-between items-start">
-          {/* Left: Logo Image */}
-          <div className="flex-shrink-0">
-            <img src="/logo.png" alt="Aakarshan Home+ Logo" className="w-64 object-contain" />
+        {/* COVER PAGE (PAGE 1) */}
+        <div className="flex flex-col items-center justify-between h-[267mm] w-full pt-16 pb-12">
+          
+          {/* TOP: Big Logo Image */}
+          <div className="flex-shrink-0 w-80">
+            <img src="/logo.png" alt="Aakarshan Home+ Logo" className="w-full object-contain mix-blend-multiply" />
           </div>
 
-          {/* Right: Contact Info */}
-          <div className="flex-1 flex flex-col items-end text-right space-y-1.5 text-[14px] text-brand-charcoal pt-2">
-            <div className="text-[#c79c3d] text-lg mb-1 tracking-wide">8986655533 / 9334800533</div>
-            <div>aakarshanhomeplus@gmail.com</div>
-            <div>aakarshanhomeplus.com</div>
-            <div className="pt-2">Maharaja Mansion, Kharkai Link Road</div>
-            <div>Bistupur - 831001</div>
-            <div className="text-gray-500 pt-2">GST: 20ABQFA9712L1Z8</div>
-            <div className="text-gray-500">UDYAM: UDYAM-JH-06-0026526</div>
+          {/* MIDDLE: QUOTATION FOR */}
+          <div className="flex flex-col items-center justify-center flex-1 w-full">
+             <div className="w-24 h-1 bg-brand-gold mb-8"></div>
+             <p className="text-xl text-gray-400 font-heading tracking-[0.2em] uppercase mb-4">Quotation For</p>
+             <h1 className="text-5xl font-heading font-bold text-brand-charcoal text-center leading-tight">
+               {recipient.to || 'Valued Client'}
+             </h1>
+             {recipient.organization && (
+               <p className="text-2xl text-gray-500 mt-4 font-medium">{recipient.organization}</p>
+             )}
           </div>
-        </header>
+
+          {/* BOTTOM: Contact Info */}
+          <div className="flex flex-col items-center text-center space-y-1.5 text-sm text-brand-charcoal pt-8 border-t border-gray-200 w-full max-w-lg">
+            <div className="text-brand-gold text-xl font-semibold mb-2 tracking-wide">8986655533 / 9334800533</div>
+            <div className="flex space-x-4">
+               <span>aakarshanhomeplus@gmail.com</span>
+               <span className="text-gray-300">|</span>
+               <span>aakarshanhomeplus.com</span>
+            </div>
+            <div className="pt-2">Maharaja Mansion, Kharkai Link Road, Bistupur - 831001</div>
+            <div className="flex space-x-4 text-gray-500 pt-2 text-xs">
+               <span>GST: 20ABQFA9712L1Z8</span>
+               <span className="text-gray-300">|</span>
+               <span>UDYAM: UDYAM-JH-06-0026526</span>
+            </div>
+          </div>
+
+        </div>
+
+
+
+        {/* PAGE 2+ (Quotation Details) */}
+        <div className="pt-8">
 
         {/* RECIPIENT & SUBJECT */}
         <section className="mb-8 flex justify-between items-end">
@@ -93,7 +128,7 @@ export default function PreviewPanel({ recipient, items, notes }) {
         </section>
 
         {recipient.subject && (
-          <div className="mb-8 bg-gray-50 p-3 border-l-4 border-brand-gold">
+          <div className="mb-8 p-3 border-l-4 border-brand-gold">
             <p className="text-sm"><span className="font-semibold">Subject:</span> {recipient.subject}</p>
           </div>
         )}
@@ -149,6 +184,7 @@ export default function PreviewPanel({ recipient, items, notes }) {
         )}
 
 
+        </div>
 
         {/* FOOTER */}
         <footer className="absolute bottom-0 left-0 right-0 px-15mm pb-2">
