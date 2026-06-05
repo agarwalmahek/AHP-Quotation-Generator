@@ -26,7 +26,21 @@ export default function PreviewPanel({ recipient, items, notes }) {
     return () => window.removeEventListener('resize', updateScale);
   }, []);
 
-  // Calculate Grand Total
+  // Calculate line item total before discounts, discount amount, and grand total
+  const lineItemTotal = items.reduce((sum, item) => {
+    if (item.isLumpSum) {
+      return sum + (Number(item.total) || 0);
+    }
+    return sum + (Number(item.quantity) * Number(item.rate) || 0);
+  }, 0);
+
+  const totalDiscount = items.reduce((sum, item) => {
+    if (item.isLumpSum) return sum;
+    const subtotal = Number(item.quantity) * Number(item.rate) || 0;
+    const discountAmt = (subtotal * (Number(item.discount) || 0)) / 100;
+    return sum + discountAmt;
+  }, 0);
+
   const grandTotal = items.reduce((sum, item) => sum + (Number(item.total) || 0), 0);
 
   // Format date to local string (e.g., DD/MM/YYYY)
@@ -162,8 +176,20 @@ export default function PreviewPanel({ recipient, items, notes }) {
                   <td className="py-3 px-4 border border-gray-200 text-right text-sm font-semibold">{Number(item.total).toLocaleString('en-IN')}</td>
                 </tr>
               ))}
-              {/* Grand Total Row */}
-              <tr className="bg-gray-100">
+              {/* Summary Rows */}
+              <tr className="bg-white break-inside-avoid">
+                <td colSpan="4" className="py-2 px-4 border border-gray-200 text-right font-heading font-semibold text-gray-600">Line Item Total</td>
+                <td colSpan="2" className="py-2 px-4 border border-gray-200 text-right font-semibold text-gray-800 whitespace-nowrap">
+                  ₹ {lineItemTotal.toLocaleString('en-IN')}
+                </td>
+              </tr>
+              <tr className="bg-white break-inside-avoid">
+                <td colSpan="4" className="py-2 px-4 border border-gray-200 text-right font-heading font-semibold text-gray-600">Discount Amount</td>
+                <td colSpan="2" className="py-2 px-4 border border-gray-200 text-right font-semibold text-red-600 whitespace-nowrap">
+                  - ₹ {totalDiscount.toLocaleString('en-IN')}
+                </td>
+              </tr>
+              <tr className="bg-gray-100 break-inside-avoid">
                 <td colSpan="4" className="py-3 px-4 border border-gray-200 text-right font-heading font-bold text-brand-charcoal">Grand Total</td>
                 <td colSpan="2" className="py-3 px-4 border border-gray-200 text-right font-bold text-brand-charcoal text-lg text-brand-gold-dark whitespace-nowrap">
                   ₹ {grandTotal.toLocaleString('en-IN')}

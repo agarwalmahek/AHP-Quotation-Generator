@@ -27,6 +27,14 @@ export default function EditorPanel({ recipient, setRecipient, items, setItems, 
     setItems([...items, { id: newId, particular: '', description: '', quantity: 1, rate: 0, discount: 0, total: 0, isLumpSum: false }]);
   };
 
+  const insertItemAfter = (index) => {
+    const newId = items.length > 0 ? Math.max(...items.map(i => i.id)) + 1 : 1;
+    const newItem = { id: newId, particular: '', description: '', quantity: 1, rate: 0, discount: 0, total: 0, isLumpSum: false };
+    const updatedItems = [...items];
+    updatedItems.splice(index + 1, 0, newItem);
+    setItems(updatedItems);
+  };
+
   const removeItem = (id) => {
     setItems(items.filter(item => item.id !== id));
   };
@@ -103,9 +111,22 @@ export default function EditorPanel({ recipient, setRecipient, items, setItems, 
         <div className="space-y-4">
           {items.map((item, index) => (
             <div key={item.id} className="p-4 border border-gray-100 rounded bg-gray-50 relative group">
-              <button onClick={() => removeItem(item.id)} className="absolute top-2 right-2 text-gray-400 hover:text-red-500">
-                <Trash2 size={16} />
-              </button>
+              <div className="absolute top-2 right-2 flex items-center gap-2">
+                <button 
+                  onClick={() => insertItemAfter(index)} 
+                  title="Insert row below"
+                  className="p-1 text-gray-400 hover:text-brand-gold hover:bg-gray-100 rounded transition-colors"
+                >
+                  <Plus size={16} />
+                </button>
+                <button 
+                  onClick={() => removeItem(item.id)} 
+                  title="Delete row"
+                  className="p-1 text-gray-400 hover:text-red-500 hover:bg-gray-100 rounded transition-colors"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-12 gap-4 mt-2">
                 <div className="md:col-span-4">
                   <label className="block text-xs text-gray-500 mb-1">Particular</label>
@@ -124,7 +145,7 @@ export default function EditorPanel({ recipient, setRecipient, items, setItems, 
 
                 <div className="md:col-span-2">
                   <label className="block text-xs text-gray-500 mb-1">Disc. (%)</label>
-                  <input type="number" min="0" max="100" value={item.discount} onChange={(e) => handleItemChange(item.id, 'discount', e.target.value)} disabled={item.isLumpSum} className="w-full p-2 text-sm border border-gray-300 rounded focus:ring-brand-gold outline-none disabled:bg-gray-200" />
+                  <input type="number" min="0" max="100" value={item.discount} onChange={(e) => handleItemChange(item.id, 'discount', e.target.value)} disabled={item.isLumpSum} className="w-full p-2 text-sm border border-gray-300 rounded focus:ring-brand-gold outline-none disabled:bg-gray-200 no-spinner" />
                 </div>
                 
                 <div className="md:col-span-2">
