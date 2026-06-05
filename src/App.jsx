@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { Save, Plus } from 'lucide-react';
 import EditorPanel from './components/EditorPanel';
 import PreviewPanel from './components/PreviewPanel';
 
@@ -23,6 +24,92 @@ function App() {
     { id: 2, text: 'Warranty applicable as per company guidelines.' },
     { id: 3, text: 'Payment terms- Upon bill submission.' }
   ]);
+
+  const [savedQuotations, setSavedQuotations] = useState([]);
+  const [toast, setToast] = useState(null);
+
+  // Load saved quotations on mount
+  useEffect(() => {
+    try {
+      const list = JSON.parse(localStorage.getItem('ahp_quotations') || '[]');
+      setSavedQuotations(list);
+    } catch (e) {
+      console.error('Failed to parse saved quotations from localStorage', e);
+    }
+  }, []);
+
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  const handleSave = () => {
+    try {
+      const list = JSON.parse(localStorage.getItem('ahp_quotations') || '[]');
+      const newQuotation = {
+        id: recipient.quotationNumber || `QTN-${Date.now()}`,
+        recipient,
+        items,
+        notes,
+        updatedAt: new Date().toISOString(),
+      };
+      
+      const updatedList = list.filter(q => q.recipient.quotationNumber !== recipient.quotationNumber);
+      updatedList.unshift(newQuotation);
+      
+      localStorage.setItem('ahp_quotations', JSON.stringify(updatedList));
+      setSavedQuotations(updatedList);
+      showToast(`Quotation ${recipient.quotationNumber} saved successfully!`);
+    } catch (e) {
+      console.error(e);
+      showToast('Failed to save quotation', 'error');
+    }
+  };
+
+  const handleNew = () => {
+    const randomNum = String(Math.floor(1000 + Math.random() * 9000));
+    setRecipient({
+      quotationNumber: `QTN-${randomNum}`,
+      to: '',
+      phone: '',
+      clientGst: '',
+      organization: '',
+      address: '',
+      date: new Date().toISOString().split('T')[0],
+      subject: 'Quotation for furnishing items as required.',
+    });
+    setItems([
+      { id: 1, particular: '', description: '', quantity: 1, rate: 0, discount: 0, total: 0, isLumpSum: false }
+    ]);
+    setNotes([
+      { id: 1, text: 'Rates are inclusive of GST.' },
+      { id: 2, text: 'Warranty applicable as per company guidelines.' },
+      { id: 3, text: 'Payment terms- Upon bill submission.' }
+    ]);
+    showToast('Started a new quotation form');
+  };
+
+  const handleLoad = (quotation) => {
+    setRecipient(quotation.recipient);
+    setItems(quotation.items);
+    setNotes(quotation.notes);
+    showToast(`Loaded quotation ${quotation.recipient.quotationNumber}`);
+  };
+
+  const handleDelete = (quotationNumber) => {
+    if (window.confirm(`Are you sure you want to delete quotation ${quotationNumber}?`)) {
+      try {
+        const list = JSON.parse(localStorage.getItem('ahp_quotations') || '[]');
+        const updatedList = list.filter(q => q.recipient.quotationNumber !== quotationNumber);
+        localStorage.setItem('ahp_quotations', JSON.stringify(updatedList));
+        setSavedQuotations(updatedList);
+        showToast(`Quotation ${quotationNumber} deleted`);
+      } catch (e) {
+        console.error(e);
+        showToast('Failed to delete quotation', 'error');
+      }
+    }
+  };
 
   const handleDownload = async () => {
     const element = document.getElementById('pdf-preview');
@@ -104,18 +191,32 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row lg:h-screen lg:overflow-hidden bg-gray-50">
+    <div className="min-h-screen flex flex-col lg:flex-row lg:h-screen lg:overflow-hidden bg-gray-50 relative">
       {/* Left side: Editor */}
       <div className="w-full lg:w-1/2 p-4 lg:p-8 lg:h-full lg:overflow-y-auto custom-scrollbar border-b lg:border-b-0 lg:border-r border-gray-200">
         <div className="max-w-2xl mx-auto">
-          <div className="flex justify-between items-center mb-8">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8">
             <h1 className="text-3xl font-heading font-bold text-brand-charcoal">Quotation Editor</h1>
-            <button
-              onClick={handleDownload}
-              className="bg-brand-gold hover:bg-brand-gold-light text-white font-semibold py-2 px-6 rounded-md shadow-md transition duration-300"
-            >
-              Download PDF
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={handleNew}
+                className="bg-white hover:bg-gray-50 text-brand-charcoal font-semibold py-2 px-4 rounded-md shadow-sm border border-gray-200 transition duration-300 text-sm flex items-center gap-1.5"
+              >
+                <Plus size={16} /> New
+              </button>
+              <button
+                onClick={handleSave}
+                className="bg-brand-charcoal hover:bg-black text-white font-semibold py-2 px-4 rounded-md shadow-md transition duration-300 text-sm flex items-center gap-1.5"
+              >
+                <Save size={16} /> Save
+              </button>
+              <button
+                onClick={handleDownload}
+                className="bg-brand-gold hover:bg-brand-gold-light text-white font-semibold py-2 px-6 rounded-md shadow-md transition duration-300 text-sm"
+              >
+                Download PDF
+              </button>
+            </div>
           </div>
           
           <EditorPanel 
@@ -125,6 +226,9 @@ function App() {
             setItems={setItems}
             notes={notes}
             setNotes={setNotes}
+            savedQuotations={savedQuotations}
+            handleLoad={handleLoad}
+            handleDelete={handleDelete}
           />
         </div>
       </div>
@@ -137,6 +241,20 @@ function App() {
           notes={notes}
         />
       </div>
+
+      {/* Toast Notification */}
+      {toast && (
+        <div className={`fixed bottom-6 right-6 z-50 flex items-center p-4 rounded-lg shadow-lg border transition-all duration-300 transform translate-y-0 ${
+          toast.type === 'success' 
+            ? 'bg-brand-charcoal border-brand-gold text-white' 
+            : 'bg-red-50 border-red-200 text-red-800'
+        }`}>
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-brand-gold animate-ping"></span>
+            <span className="text-sm font-semibold font-body">{toast.message}</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

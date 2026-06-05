@@ -1,6 +1,9 @@
-import { Plus, Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import { Plus, Trash2, FolderOpen, ChevronDown, ChevronUp } from 'lucide-react';
 
-export default function EditorPanel({ recipient, setRecipient, items, setItems, notes, setNotes }) {
+export default function EditorPanel({ recipient, setRecipient, items, setItems, notes, setNotes, savedQuotations = [], handleLoad, handleDelete }) {
+  const [isSavedOpen, setIsSavedOpen] = useState(false);
+
   const handleRecipientChange = (e) => {
     const { name, value } = e.target;
     setRecipient(prev => ({ ...prev, [name]: value }));
@@ -54,6 +57,68 @@ export default function EditorPanel({ recipient, setRecipient, items, setItems, 
 
   return (
     <div className="space-y-8 font-body">
+      {/* Saved Quotations */}
+      <section className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+        <button 
+          onClick={() => setIsSavedOpen(!isSavedOpen)} 
+          className="w-full flex justify-between items-center text-xl font-heading font-semibold text-brand-charcoal outline-none"
+        >
+          <div className="flex items-center gap-2">
+            <FolderOpen className="text-brand-gold" size={22} />
+            <span>Saved Quotations ({savedQuotations.length})</span>
+          </div>
+          {isSavedOpen ? <ChevronUp size={20} className="text-gray-500" /> : <ChevronDown size={20} className="text-gray-500" />}
+        </button>
+
+        {isSavedOpen && (
+          <div className="mt-4 space-y-3 max-h-60 overflow-y-auto pr-1 custom-scrollbar">
+            {savedQuotations.length === 0 ? (
+              <p className="text-sm text-gray-400 italic py-2">No saved quotations found. Create and save one above!</p>
+            ) : (
+              savedQuotations.map((q) => {
+                const total = q.items.reduce((sum, item) => sum + (Number(item.total) || 0), 0);
+                const dateStr = q.recipient.date ? new Date(q.recipient.date).toLocaleDateString('en-IN', {
+                  day: '2-digit', month: '2-digit', year: 'numeric'
+                }) : '';
+                
+                return (
+                  <div key={q.id} className="flex justify-between items-center p-3 rounded bg-gray-50 hover:bg-gray-100 border border-gray-100 transition-colors">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-brand-charcoal text-sm">{q.recipient.quotationNumber}</span>
+                        <span className="text-xs text-gray-400 font-medium">{dateStr}</span>
+                      </div>
+                      <div className="text-xs text-gray-600">
+                        <span className="font-semibold">{q.recipient.to || 'No Recipient'}</span>
+                        {q.recipient.organization && ` - ${q.recipient.organization}`}
+                      </div>
+                      <div className="text-xs font-semibold text-brand-gold">
+                        Total: ₹ {total.toLocaleString('en-IN')}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button 
+                        onClick={() => handleLoad(q)} 
+                        className="px-3 py-1 text-xs font-semibold bg-brand-gold hover:bg-brand-gold-light text-white rounded transition-colors"
+                      >
+                        Load
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(q.recipient.quotationNumber)} 
+                        className="p-1.5 text-gray-400 hover:text-red-500 rounded hover:bg-gray-200 transition-colors"
+                        title="Delete quotation"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        )}
+      </section>
+
       {/* Recipient Details */}
       <section className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
         <h2 className="text-xl font-heading font-semibold text-brand-charcoal mb-4">Recipient Details</h2>
