@@ -3,6 +3,27 @@ import { Save, Plus } from 'lucide-react';
 import EditorPanel from './components/EditorPanel';
 import PreviewPanel from './components/PreviewPanel';
 
+const getNextQuotationNumber = (list) => {
+  if (!list || list.length === 0) {
+    return 'QTN-0001';
+  }
+  const numbers = list
+    .map(q => {
+      const numStr = q.recipient?.quotationNumber;
+      if (!numStr) return null;
+      const match = numStr.match(/QTN-(\d+)/i);
+      return match ? parseInt(match[1], 10) : null;
+    })
+    .filter(n => n !== null);
+
+  if (numbers.length === 0) {
+    return 'QTN-0001';
+  }
+  const maxNumber = Math.max(...numbers);
+  const nextNumber = maxNumber + 1;
+  return `QTN-${String(nextNumber).padStart(4, '0')}`;
+};
+
 function App() {
   const [recipient, setRecipient] = useState({
     quotationNumber: 'QTN-0001',
@@ -22,7 +43,7 @@ function App() {
   const [notes, setNotes] = useState([
     { id: 1, text: 'Rates are inclusive of GST.' },
     { id: 2, text: 'Warranty applicable as per company guidelines.' },
-    { id: 3, text: 'Payment terms- Upon bill submission.' }
+    { id: 3, text: 'Payment Terms - 50% advance and 50% before delivery.' }
   ]);
 
   const [savedQuotations, setSavedQuotations] = useState([]);
@@ -33,6 +54,12 @@ function App() {
     try {
       const list = JSON.parse(localStorage.getItem('ahp_quotations') || '[]');
       setSavedQuotations(list);
+      
+      const nextQuotationNumber = getNextQuotationNumber(list);
+      setRecipient(prev => ({
+        ...prev,
+        quotationNumber: nextQuotationNumber
+      }));
     } catch (e) {
       console.error('Failed to parse saved quotations from localStorage', e);
     }
@@ -67,9 +94,10 @@ function App() {
   };
 
   const handleNew = () => {
-    const randomNum = String(Math.floor(1000 + Math.random() * 9000));
+    const list = JSON.parse(localStorage.getItem('ahp_quotations') || '[]');
+    const nextQuotationNumber = getNextQuotationNumber(list);
     setRecipient({
-      quotationNumber: `QTN-${randomNum}`,
+      quotationNumber: nextQuotationNumber,
       to: '',
       phone: '',
       clientGst: '',
@@ -84,7 +112,7 @@ function App() {
     setNotes([
       { id: 1, text: 'Rates are inclusive of GST.' },
       { id: 2, text: 'Warranty applicable as per company guidelines.' },
-      { id: 3, text: 'Payment terms- Upon bill submission.' }
+      { id: 3, text: 'Payment Terms - 50% advance and 50% before delivery.' }
     ]);
     showToast('Started a new quotation form');
   };
@@ -158,7 +186,7 @@ function App() {
 
     const opt = {
       margin:       [15, 0, 15, 0], // Top, Left, Bottom, Right
-      filename:     `Quotation_${recipient.organization || 'AakarshanHomePlus'}.pdf`,
+      filename:     `AHP - ${recipient.to || 'Client'}.pdf`,
       image:        { type: 'jpeg', quality: 0.98 },
       html2canvas:  { 
         scale: 2, 
