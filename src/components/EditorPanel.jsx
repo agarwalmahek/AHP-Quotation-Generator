@@ -19,6 +19,17 @@ export default function EditorPanel({ recipient, setRecipient, items, setItems, 
           const discountAmt = (subtotal * (Number(updated.discount) || 0)) / 100;
           updated.total = subtotal - discountAmt;
         }
+        if (field === 'isLumpSum') {
+          if (value === true) {
+            updated.subItems = updated.subItems || [{ id: 1, particular: '', quantity: 1, rate: 0, discount: 0 }];
+            updated.total = 0; // default total for new lump sum breakdown
+          } else {
+            // Recalculate total based on Qty/Rate/Discount when toggled off
+            const subtotal = Number(updated.quantity) * Number(updated.rate);
+            const discountAmt = (subtotal * (Number(updated.discount) || 0)) / 100;
+            updated.total = subtotal - discountAmt;
+          }
+        }
         return updated;
       }
       return item;
@@ -40,6 +51,85 @@ export default function EditorPanel({ recipient, setRecipient, items, setItems, 
 
   const removeItem = (id) => {
     setItems(items.filter(item => item.id !== id));
+  };
+
+  const handleSubItemChange = (itemId, subId, field, value) => {
+    setItems(prev => prev.map(item => {
+      if (item.id === itemId) {
+        const updatedSubItems = (item.subItems || []).map(sub => {
+          if (sub.id === subId) {
+            return { ...sub, [field]: value };
+          }
+          return sub;
+        });
+
+        // Auto-calculate parent total
+        const parentTotal = updatedSubItems.reduce((sum, sub) => {
+          const qty = Number(sub.quantity) || 0;
+          const rate = Number(sub.rate) || 0;
+          const disc = Number(sub.discount) || 0;
+          const subtotal = qty * rate;
+          const discAmt = (subtotal * disc) / 100;
+          return sum + (subtotal - discAmt);
+        }, 0);
+
+        return { ...item, subItems: updatedSubItems, total: parentTotal };
+      }
+      return item;
+    }));
+  };
+
+  const addSubItem = (itemId) => {
+    setItems(prev => prev.map(item => {
+      if (item.id === itemId) {
+        const subItems = item.subItems || [];
+        const newSubId = subItems.length > 0 ? Math.max(...subItems.map(s => s.id)) + 1 : 1;
+        const newSubItems = [...subItems, { id: newSubId, particular: '', quantity: 1, rate: 0, discount: 0 }];
+
+        // Auto-calculate parent total
+        const parentTotal = newSubItems.reduce((sum, sub) => {
+          const qty = Number(sub.quantity) || 0;
+          const rate = Number(sub.rate) || 0;
+          const disc = Number(sub.discount) || 0;
+          const subtotal = qty * rate;
+          const discAmt = (subtotal * disc) / 100;
+          return sum + (subtotal - discAmt);
+        }, 0);
+
+        return {
+          ...item,
+          subItems: newSubItems,
+          total: parentTotal
+        };
+      }
+      return item;
+    }));
+  };
+
+  const removeSubItem = (itemId, subId) => {
+    setItems(prev => prev.map(item => {
+      if (item.id === itemId) {
+        const subItems = item.subItems || [];
+        const newSubItems = subItems.filter(sub => sub.id !== subId);
+
+        // Auto-calculate parent total
+        const parentTotal = newSubItems.reduce((sum, sub) => {
+          const qty = Number(sub.quantity) || 0;
+          const rate = Number(sub.rate) || 0;
+          const disc = Number(sub.discount) || 0;
+          const subtotal = qty * rate;
+          const discAmt = (subtotal * disc) / 100;
+          return sum + (subtotal - discAmt);
+        }, 0);
+
+        return {
+          ...item,
+          subItems: newSubItems,
+          total: parentTotal
+        };
+      }
+      return item;
+    }));
   };
 
   const addNote = () => {
@@ -219,16 +309,97 @@ export default function EditorPanel({ recipient, setRecipient, items, setItems, 
                 </div>
               </div>
 
-              {/* Full-width description field */}
-              <div className="mt-2">
-                <textarea
-                  rows={2}
-                  value={item.description || ''}
-                  onChange={(e) => handleItemChange(item.id, 'description', e.target.value)}
-                  placeholder="Optional details / specs (shown in small font below the item)"
-                  className="w-full p-2 text-xs border border-gray-200 rounded focus:ring-brand-gold outline-none resize-none text-gray-500"
-                />
-              </div>
+              {/* If Lump Sum, render sub line items table in the same place. Otherwise render textarea. */}
+              {item.isLumpSum ? (
+                <div className="mt-3 bg-white p-3 border border-gray-200 rounded font-body">
+                  <div className="flex justify-between items-center mb-2 pb-1 border-b border-gray-100">
+                    <span className="text-xs font-semibold text-gray-600">Sub-items breakdown (Optional details)</span>
+                    <button 
+                      type="button" 
+                      onClick={() => addSubItem(item.id)} 
+                      className="text-xs text-brand-gold hover:text-brand-gold-light font-semibold flex items-center gap-1"
+                    >
+                      <Plus size={12} /> Add Sub-item
+                    </button>
+                  </div>
+                  
+                  {(!item.subItems || item.subItems.length === 0) ? (
+                    <p className="text-[11px] text-gray-400 italic">No sub-items added. Click "Add Sub-item" to build a detailed breakdown.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="grid grid-cols-12 gap-2 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+                        <div className="col-span-4">Sub-Particular</div>
+                        <div className="col-span-2 text-center">Qty</div>
+                        <div className="col-span-3 text-right">Rate (₹)</div>
+                        <div className="col-span-2 text-center">Disc. (%)</div>
+                        <div className="col-span-1"></div>
+                      </div>
+                      
+                      {item.subItems.map((sub) => (
+                        <div key={sub.id} className="grid grid-cols-12 gap-2 items-center">
+                          <div className="col-span-4">
+                            <input 
+                              type="text" 
+                              value={sub.particular} 
+                              onChange={(e) => handleSubItemChange(item.id, sub.id, 'particular', e.target.value)} 
+                              placeholder="Sub-item name / spec" 
+                              className="w-full p-1.5 text-xs border border-gray-200 rounded focus:ring-brand-gold outline-none text-gray-600 font-body" 
+                            />
+                          </div>
+                          <div className="col-span-2">
+                            <input 
+                              type="number" 
+                              min="1" 
+                              value={sub.quantity} 
+                              onChange={(e) => handleSubItemChange(item.id, sub.id, 'quantity', e.target.value)} 
+                              className="w-full p-1.5 text-xs border border-gray-200 rounded focus:ring-brand-gold outline-none text-center text-gray-600 font-body no-spinner" 
+                            />
+                          </div>
+                          <div className="col-span-3">
+                            <input 
+                              type="number" 
+                              min="0" 
+                              value={sub.rate} 
+                              onChange={(e) => handleSubItemChange(item.id, sub.id, 'rate', e.target.value)} 
+                              className="w-full p-1.5 text-xs border border-gray-200 rounded focus:ring-brand-gold outline-none text-right text-gray-600 font-body no-spinner" 
+                            />
+                          </div>
+                          <div className="col-span-2">
+                            <input 
+                              type="number" 
+                              min="0" 
+                              max="100"
+                              value={sub.discount || 0} 
+                              onChange={(e) => handleSubItemChange(item.id, sub.id, 'discount', e.target.value)} 
+                              className="w-full p-1.5 text-xs border border-gray-200 rounded focus:ring-brand-gold outline-none text-center text-gray-600 font-body no-spinner" 
+                            />
+                          </div>
+                          <div className="col-span-1 text-center">
+                            <button 
+                              type="button" 
+                              onClick={() => removeSubItem(item.id, sub.id)} 
+                              className="text-gray-400 hover:text-red-500 transition-colors"
+                              title="Remove sub-item"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="mt-2">
+                  <textarea
+                    rows={2}
+                    value={item.description || ''}
+                    onChange={(e) => handleItemChange(item.id, 'description', e.target.value)}
+                    placeholder="Optional details / specs (shown in small font below the item)"
+                    className="w-full p-2 text-xs border border-gray-200 rounded focus:ring-brand-gold outline-none resize-none text-gray-500 font-body"
+                  />
+                </div>
+              )}
               <div className="mt-2 flex items-center">
                 <input type="checkbox" id={`lump-${item.id}`} checked={item.isLumpSum} onChange={(e) => handleItemChange(item.id, 'isLumpSum', e.target.checked)} className="mr-2 text-brand-gold focus:ring-brand-gold rounded border-gray-300" />
                 <label htmlFor={`lump-${item.id}`} className="text-xs text-gray-600 cursor-pointer">Lump Sum Item (Enter total manually, ignore rate/qty)</label>
