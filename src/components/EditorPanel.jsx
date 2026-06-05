@@ -200,12 +200,12 @@ export default function EditorPanel({ recipient, setRecipient, items, setItems, 
                 
                 <div className="md:col-span-2">
                   <label className="block text-xs text-gray-500 mb-1">Qty</label>
-                  <input type="number" min="1" value={item.quantity} onChange={(e) => handleItemChange(item.id, 'quantity', e.target.value)} disabled={item.isLumpSum} className="w-full p-2 text-sm border border-gray-300 rounded focus:ring-brand-gold outline-none disabled:bg-gray-200" />
+                  <input type="number" min="1" value={item.quantity} onChange={(e) => handleItemChange(item.id, 'quantity', e.target.value)} disabled={item.isLumpSum} className="w-full p-2 text-sm border border-gray-300 rounded focus:ring-brand-gold outline-none disabled:bg-gray-200 no-spinner" />
                 </div>
                 
                 <div className="md:col-span-2">
                   <label className="block text-xs text-gray-500 mb-1">Rate (₹)</label>
-                  <input type="number" min="0" value={item.rate} onChange={(e) => handleItemChange(item.id, 'rate', e.target.value)} disabled={item.isLumpSum} className="w-full p-2 text-sm border border-gray-300 rounded focus:ring-brand-gold outline-none disabled:bg-gray-200" />
+                  <input type="number" min="0" value={item.rate} onChange={(e) => handleItemChange(item.id, 'rate', e.target.value)} disabled={item.isLumpSum} className="w-full p-2 text-sm border border-gray-300 rounded focus:ring-brand-gold outline-none disabled:bg-gray-200 no-spinner" />
                 </div>
 
                 <div className="md:col-span-2">
