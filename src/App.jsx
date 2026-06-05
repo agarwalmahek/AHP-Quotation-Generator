@@ -224,7 +224,7 @@ function App() {
       <div className="w-full lg:w-1/2 p-4 lg:p-8 lg:h-full lg:overflow-y-auto custom-scrollbar border-b lg:border-b-0 lg:border-r border-gray-200">
         <div className="max-w-2xl mx-auto">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8">
-            <h1 className="text-3xl font-heading font-bold text-brand-charcoal">AHP Quotation Editor</h1>
+            <h1 className="text-3xl font-heading font-bold text-brand-charcoal">AHP QTN GEN</h1>
             <div className="flex flex-wrap items-center gap-2">
               <button
                 onClick={handleNew}
