@@ -29,13 +29,29 @@ export default function PreviewPanel({ recipient, items, notes }) {
   // Calculate line item total before discounts, discount amount, and grand total
   const lineItemTotal = items.reduce((sum, item) => {
     if (item.isLumpSum) {
+      if (item.subItems && item.subItems.length > 0) {
+        const subItemsSubtotal = item.subItems.reduce((subSum, sub) => {
+          return subSum + (Number(sub.quantity) * Number(sub.rate) || 0);
+        }, 0);
+        return sum + subItemsSubtotal;
+      }
       return sum + (Number(item.total) || 0);
     }
     return sum + (Number(item.quantity) * Number(item.rate) || 0);
   }, 0);
 
   const totalDiscount = items.reduce((sum, item) => {
-    if (item.isLumpSum) return sum;
+    if (item.isLumpSum) {
+      if (item.subItems && item.subItems.length > 0) {
+        const subItemsDiscount = item.subItems.reduce((subSum, sub) => {
+          const subtotal = Number(sub.quantity) * Number(sub.rate) || 0;
+          const discountAmt = (subtotal * (Number(sub.discount) || 0)) / 100;
+          return subSum + discountAmt;
+        }, 0);
+        return sum + subItemsDiscount;
+      }
+      return sum;
+    }
     const subtotal = Number(item.quantity) * Number(item.rate) || 0;
     const discountAmt = (subtotal * (Number(item.discount) || 0)) / 100;
     return sum + discountAmt;
@@ -166,8 +182,31 @@ export default function PreviewPanel({ recipient, items, notes }) {
                   <td className="py-3 px-4 border border-gray-200 text-center text-sm text-gray-500">{idx + 1}</td>
                   <td className="py-3 px-4 border border-gray-200 text-sm font-medium">
                     <div>{item.particular}</div>
-                    {item.description && (
-                      <div className="text-xs text-gray-400 italic mt-1 font-normal leading-snug whitespace-pre-wrap">{item.description}</div>
+                    {item.isLumpSum && item.subItems && item.subItems.length > 0 ? (
+                      <div className="mt-2 pl-3 border-l-2 border-brand-gold/40 text-[10px] text-gray-500 font-normal">
+                        <table className="w-full text-left border-collapse mt-1">
+                          <tbody>
+                            {item.subItems.map((sub, sIdx) => {
+                              const subtotal = Number(sub.quantity) * Number(sub.rate);
+                              const subDiscount = (subtotal * (Number(sub.discount) || 0)) / 100;
+                              const subTotal = subtotal - subDiscount;
+                              return (
+                                <tr key={sub.id || sIdx} className="border-b border-gray-50 last:border-0 leading-tight">
+                                  <td className="py-1 pr-2 text-gray-600 font-medium leading-snug">{sub.particular || '-'}</td>
+                                  <td className="py-1 px-1 w-8 text-center text-gray-600 whitespace-nowrap">{sub.quantity}</td>
+                                  <td className="py-1 px-1 w-16 text-right text-gray-600 whitespace-nowrap">₹{Number(sub.rate).toLocaleString('en-IN')}</td>
+                                  <td className="py-1 px-1 w-12 text-center text-gray-600 whitespace-nowrap">{sub.discount ? `${sub.discount}%` : '0%'}</td>
+                                  <td className="py-1 pl-1 w-20 text-right text-gray-600 font-semibold whitespace-nowrap">₹{subTotal.toLocaleString('en-IN')}</td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      item.description && (
+                        <div className="text-xs text-gray-400 italic mt-1 font-normal leading-snug whitespace-pre-wrap">{item.description}</div>
+                      )
                     )}
                   </td>
                   <td className="py-3 px-4 border border-gray-200 text-center text-sm">{item.isLumpSum ? '-' : item.quantity}</td>
